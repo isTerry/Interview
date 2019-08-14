@@ -1,0 +1,383 @@
+sql查询语句书写顺序、执行顺序
+当它发现第一个词是SELECT关键字的时候，它会跳到FROM关键字，
+然后通过FROM关键字找到表名并把表装入内存(或者join筛选之后)，并形成一张虚表。
+接着是找WHERE关键字，如果找不到则返回到SELECT找字段解析，如果找到WHERE，则分析WHERE后面返回值，真或假，
+来确定接下来执不执行SELECT。如果为真那么把这条记录装到一个虚表当中，指针再指向下一条记录。
+如果为假那么指针直接指向下一条记录，而不进行其它操作。一直检索完整个表，并把 检索出来的虚拟表返回给用户。
+书写顺序：select （distinct）、from、join on、where、group by、having、order by（默认asc，desc）、limit
+执行顺序：from、join on、where、group by、having、select （distinct）、order by（默认asc，desc）、limit
+
+
+schema就是数据库对象的集合，这个集合包含了各种对象如：表、视图、存储过程、索引等。为了区分不同的集合起不同的名字。
+默认情况下一个用户对应一个集合，用户的schema名等于用户名，并作为该用户缺省schema。所以schema集合看上去像用户名。
+如果把database看作是一个仓库，仓库很多房间（schema），一个schema代表一个房间，table可以看作是每个房间中的储物柜，
+user是每个schema的主人，有操作数据库中每个房间的权利，就是说每个数据库映射的user有每个schema（房间）的钥匙。
+我们访问一个表时，没有指明该表属于哪一个schema中的，系统就会自动给我们在表上加上缺省的sheman名。
+在数据库中一个对象的完整名称为schema.object，而不属user.object。
+
+
+在 MySQL 中，有四种主要的类型：“文本、数字、时间类型、二进制类型”。
+Text 类型：
+CHAR(size)保存固定长度的字符串，“最多 255 个字符”！！！
+VARCHAR(size)保存可变长度的字符串。“在括号中指定字符串的最大长度”。
+varchar类型在5.0.3以下的版本中的最大长度限制为255，而在5.0.3及以上的版本中，varchar数据类型的长度支持到了65535，
+也就是说可以存放65532个字节（注意是字节而不是字符！！！）的数据（起始位和结束位占去了3个字节）
+！注释：如果值的长度大于 65535，则被转换为 TEXT 类型。
+TEXT与char和varchar不同的是，text不可以有默认值，其最大长度是2的16次方-1（）
+经常变化的字段用varchar、知道固定长度的用char、超过255字符的只能用varchar或者text、能用varchar的地方不用text
+
+Number 类型：
+TINYINT(size)	-128 到 127 常规。0 到 255 无符号*。在括号中规定最大位数。
+SMALLINT(size)	-32768 到 32767 常规。0 到 65535 无符号*。在括号中规定最大位数。
+MEDIUMINT(size)	-8388608 到 8388607 普通。0 to 16777215 无符号*。在括号中规定最大位数。
+INT(size)	-2147483648 到 2147483647 常规。0 到 4294967295 无符号*。在括号中规定最大位数。
+BIGINT(size)	-9223372036854775808 到 9223372036854775807 常规。0 到 18446744073709551615 无符号*。在括号中规定最大位数。
+FLOAT(size,d)	带有浮动小数点的小数字。在括号中规定最大位数。在 d 参数中规定小数点右侧的最大位数。
+DOUBLE(size,d)	带有浮动小数点的大数字。在括号中规定最大位数。在 d 参数中规定小数点右侧的最大位数。
+DECIMAL(size,d)	FLOAT和DOUBLE在不指 定精度时，默认会按照实际的精度来显示，而DECIMAL在不指定精度时，默认整数为10，小数为0。
+通常，整数可以是负数或正数。如果添加 UNSIGNED 属性，那么范围将从 0 开始，而不是某个负数。
+
+Date 类型：
+DATE()	
+日期。格式：YYYY-MM-DD
+注释：支持的范围是从 '1000-01-01' 到 '9999-12-31'
+DATETIME()	
+*日期和时间的组合。格式：YYYY-MM-DD HH:MM:SS
+注释：支持的范围是从 '1000-01-01 00:00:00' 到 '9999-12-31 23:59:59'
+
+二进制数据类型：可存储任何数据，如文字、图像、多媒体等。
+TINYBLOB 最大长度为255字节
+BLOB 最大长度为64KB
+MEDIUMBLOB 最大长度为16MB
+LONGBLOB 最大长度为4GB
+------------------------------------------------------------------------------------------
+常用SQL命令：
+https://blog.csdn.net/qq_31279347/article/details/82462126
+
+创建表
+    mysql> CREATE TABLE runoob_tbl(
+    -> runoob_id INT NOT NULL AUTO_INCREMENT,
+    -> runoob_title VARCHAR(100) NOT NULL DEFAULT 'Book',
+    -> runoob_author VARCHAR(40) NOT NULL,
+    -> submission_date DATE,
+    -> PRIMARY KEY ( runoob_id )
+    -> )ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+考虑什么都不插入和插入null，NOT NULL DEFAULT不冲突
+
+删除表
+mysql> DROP TABLE runoob_tbl
+
+
+插入数据
+mysql> INSERT INTO runoob_tbl
+-> (runoob_title, runoob_author, submission_date)
+-> VALUES
+-> ("学习 PHP", "菜鸟教程", NOW());
+
+MySQL 的 WHERE 子句的字符串比较是不区分大小写的。 
+你可以使用 BINARY 关键字来设定 WHERE 子句的字符串比较是区分大小写的。
+mysql> SELECT * from runoob_tbl WHERE BINARY runoob_author='runoob.com';
+
+更新 
+将 id 为 5 的手机号改为默认的:
+update students set tel=default where id=5;
+
+将手机号为 13288097888 的姓名改为 “小明”, 年龄改为 19:
+update students set name="小明", age=19 where tel="13288097888";
+
+删除
+mysql> DELETE FROM runoob_tbl WHERE runoob_id=3;
+
+like子句
+mysql> SELECT * from runoob_tbl WHERE runoob_author LIKE '%COM';
+
+排序 
+你可以使用 ASC 或 DESC 关键字来设置查询结果是按升序或降序排列。 默认情况下，它是按升序排列。
+这是升序
+mysql> SELECT * from runoob_tbl ORDER BY submission_date ASC; 
+order by code,name desc等同于order by code asc, name desc
+
+这是降序
+select * from a order by code desc, name desc;
+
+
+
+1交叉连接，去掉where 或者 inner join的等值 得出的结果就是笛卡尔积，笛卡尔积是两个表每一行的交叉。
+2where 连接多个表也属于内连接，在数据库中被称为“隐性内链接”。inner join被称为“显性内连接”，
+！！！inner join效率高，只针对符合on后面条件的记录进行连接,
+！！！而WHERE的话，往往会先生成两个表行数乘积行的数据表（先连接），然后才根据WHERE条件从中选择
+3“自然连接(natural join)是一种特殊的等值连接”，数据库内部会将两个表通过共有的字段等值连接并且“去掉两个表重复的字段”，
+自然联结的作用就是排除多次出现，使每个列只返回一次。
+4自连接：表和其“自身”连接
+5外连接分为左外连接、右外连接、全外链接三种。 
+左外连接： left join
+包括左表的所有行，而不仅仅是联接列所匹配的行。如果左表的某行在右表中没有匹配行，则在相关联的结果集行中右表的所有选择列表列均为空值。
+右外连接： right join
+包括右表的所有行，而不仅仅是联接列所匹配的行。如果右表的某行在左表中没有匹配行，则在相关联的结果集行中左表的所有选择列表列均为空值。
+全外链接： full join
+左外连接和右外连接的并集。
+
+根据on条件的使用分类：
+等值连接 “=”
+不等连接除去“=”的其他，如<,>,<=,!=,<>......
+
+
+多表查询（理论上说，可以连接多个其他表。 但是，为了获得更好的性能，应该限制要连接的表的数量(最好不要超过三个表)。）
+- as关键字可用来做别名识别 
+- 默认连接的是内连接
+select * from book b inner join category c 
+on b.category_id = c.category_id;
+“作用上”相当于：
+select * from book b ,category c 
+where b.category_id  = c.category_id;
+
+
+外连接有左右连接（如下）： 
+左连接（以左边为基准）： 
+查询出所有的书籍分类，及每个分类下的书籍信息；（这里*包括c.*和b.*）
+select * from category c left （outer） join book b on c.category_id = b.category_id;
+右连接（以右边为基准）： 
+查询出所有的书籍分类，及每个分类下的书籍信息；
+select c.*,b.* from book b right （outer） join category c on c.category_id = b.category_id;
+
+NULL的处理 
+查找数据表中 runoob_test_tbl 列是否为 NULL 
+- 必须使用 IS NULL 和 IS NOT NULL
+
+事务
+begin;/begin work/start trasaction # 开始事务
+commit; # 提交事务/rollback; # 回滚 
+
+alter命令 
+删除，添加表字段
+ALTER TABLE testalter_tbl DROP i;               ---删除i字段
+ALTER TABLE testalter_tbl ADD i INT FIRST;   ----增加i字段，并放在第一位
+ALTER TABLE testalter_tbl ADD i INT AFTER c;   ---增加i字段，并放在c字段后面
+
+修改结构增加索引
+ALTER table tableName ADD INDEX indexName(columnName)
+
+创建表时直接指定：
+增加主键：primary key（field_name）                 
+增加外键：FOREIGN KEY (`category_id`) REFERENCES `category` (`category_id`)
+增加索引： INDEX(year_publication)
+
+！！！分页查询 
+LIMIT [offset,] rows
+offset指定要返回的第一行的偏移量，rows第二个指定返回行的最大数目。
+初始行的偏移量是0(不是1)。
+limit n 等同于 limit 0,n
+查询第11到第15条数据，共5条
+select * from table_name limit 10,5
+
+
+创建视图（作为一个虚表，存储查询定义）
+create view demo_view as select * from demo_table;
+好处1：减少数据的冗余，方便对数据操作
+数据库虽然可以存储海量数据，但是在数据表设计上却不可能每种关系创建数据表
+例如，对于学生表，存储了学生信息，学生的属性包括学号、姓名、年龄、家庭地址等信息；而学生成绩表只存储了学生学号、科目、成绩等信息。现获得学生姓名和成绩信息，那么就需要创建一个关系，该关系需要包含学生的姓名、科目、成绩。但是为了该关系创建一个新的数据表，并利用实际信息进行填充，以备查询使用，是不合适的，这样会造成了数据库中数据的大量冗余。
+因此视图可以“存储查询定义”，就如同存储了一个新的关系，用户就可以直接对视图中所存储的关系进行各种操作，就如同面对的是真实的数据表。
+好处2：数据的安全和保密
+一个数据表可能包含很多列，但是这些列的信息，对于不同的角色来说不是全部公开的，
+对于员工表来说吧，一个普通的员工只能看见这个员工表中的姓名和年龄这些信息，
+但是对于高层来说，他们要看见员工表中更多信息，不仅仅是上面的两列还有其他的信息，包括员工的住址和员工的薪资待遇，
+这个时候都是同一张表，怎么办？视图可以解决呀，首先建立“一个视图”只有员工的姓名和年龄，“再建一个视图”包含地址和薪资待遇的信息。
+这样就可以根据不同的角色分配两个视图的查询权限，与实际表隔离开来。这样就可以提高数据访问的安全性了。
+
+
+存储过程（Stored Procedure）是一组SQL语句集形成可编程的函数，经编译后存储在数据库中，
+用户通过指定存储过程的名字并给定参数（如果该存储过程带有参数）来调用执行它。
+DELIMITER //                               -- 把 // 定义为执行语法     （其实没有这个话也可以的）
+  CREATE PROCEDURE myproc(OUT s int)
+    BEGIN
+      SELECT COUNT(*) INTO s FROM students;
+    END
+    //
+DELIMITER ;
+MySQL默认以";"为分隔符，如果没有声明分割符，则编译器会把存储过程当成SQL语句进行处理，因此编译过程会报错，
+所以要事先用“DELIMITER //”声明当前段分隔符，让编译器把两个"//"之间的内容当做存储过程的代码，不会执行这些代码；
+“DELIMITER ;”的意为把分隔符还原。
+
+
+触发器（建立在表上，针对表）
+for each row 每行受影响，触发器都运行。叫行级触发器。
+触发器中分行级触发器和语句级触发器，可不写for each row，不管影响多少行都仅仅运行一次。
+mysql不支持语句触发器，所以必须写for each row。
+CREATE TRIGGER trigger_name trigger_time trigger_event ON tb_name FOR EACH ROW trigger_stmt
+trigger_name：触发器的名称
+tirgger_time：触发时机，为BEFORE或者AFTER
+trigger_event：触发事件，为INSERT、DELETE或者UPDATE
+tb_name：表示建立触发器的表明，就是在哪张表上建立触发器
+trigger_stmt：触发器的程序体，可以是一条SQL语句或者是用BEGIN和END包含的多条语句
+
+所以可以说MySQL创建以下六种触发器：
+BEFORE INSERT,BEFORE DELETE,BEFORE UPDATE
+AFTER INSERT,AFTER DELETE,AFTER UPDATE
+
+tips：一般情况下，mysql默认是以 ; 作为结束执行语句，与触发器中需要的分行起冲突为解决此问题可用DELIMITER，
+如：DELIMITER ||，可以将结束符号变成||当触发器创建完成后，可以用DELIMITER ;来将结束符号变成;
+mysql> DELIMITER ||
+mysql> CREATE TRIGGER demo BEFORE DELETE
+    -> ON users FOR EACH ROW
+    -> BEGIN
+    -> INSERT INTO logs VALUES(NOW());
+    -> INSERT INTO logs VALUES(NOW());
+    -> END
+    -> ||
+Query OK, 0 rows affected (0.06 sec)
+
+
+drop truncate delete
+（1）DELETE语句执行删除的过程是每次从表中删除一行，并且同时将该行的删除操作作为事务记录在日志中保存以便进行进行回滚操作
+，注意带上where子句。
+TRUNCATE TABLE 则一次性地从表中删除所有的数据,删除操作"不记录记入日志"保存，删除行是不能恢复的。
+并且在删除的过程中“不会激活与表有关的删除触发器”。执行速度快。
+（2）表和索引所占空间。
+当表被TRUNCATE 后，这个表和索引所占用的空间会恢复到初始大小，
+DELETE操作不会减少表或索引所占用的空间。
+（3）在速度上，一般来说，drop> truncate > delete。
+如果想保留表而将所有数据删除，并且和事务无关，不用触发trigger，用truncate即可；否则用delete；
+如果将表所占用的空间全释放掉（包括表的数据结构），用drop。
+
+建立索引默认是按ASC升序
+！为什么先建表，再批量插入大量数据，最后建立索引？
+加快数据的录入，因为如果先建索引，每插入一条记录就要维护一次索引。
+！为什么大量数据的录入先销毁索引再重新创建索引？
+因为维护索引会降低更新的速度。
+
+多列排序，根据列名顺序确定优先级，当前面相同时，考虑后面列
+
+为什么用is null和 is not null？
+因为== 和！=会把值作比较，任何值都不能和Null比较，故全返回false，查询为空
+
+强调 not 对null取反 仍然是null
+
+like模糊查询，只对char、varchar、text类型使用
+通配符：% _ [] 
+%	替代0个或多个（任意个）字符
+_	替代一个字符（则__替代两个字符）
+[charlist]	字符列中的任何单一字符
+[^charlist] 或者 [!charlist] 不在字符列中的任何单一字符
+1、LIKE’Mc%’ 将搜索以字母 Mc 开头的所有字符串（如 McBadden）。
+2、LIKE’%inger’ 将搜索以字母 inger 结尾的所有字符串（如 Ringer、Stringer）。
+3、LIKE’%en%’ 将搜索在任何位置包含字母 en 的所有字符串（如 Bennet、Green、McBadden）。
+4、LIKE’_heryl’ 将搜索以字母 heryl 结尾的所有六个字母的名称（如 Cheryl、Sheryl）。
+5、LIKE’[CK]ars[eo]n’ 将搜索下列字符串：Carsen、Karsen、Carson 和 Karson。
+6、LIKE’[M-Z]inger’ 将搜索以字符串 inger 结尾、以从 M 到 Z 的任何单个字母开头的所有名称（如 Ringer）。
+7、LIKE’M[^c]%’ 将搜索以字母 M 开头，并且第二个字母不是 c 的所有名称（如MacFeather）。 
+8、LIKE'5[%]' 这里的%理解为%字符，而非%通配符
+9、LIKE'[a-cdf]' 理解为a,b,c,d或f
+
+连接符+或||连接表的多列（近似类型）作为一列
+mysql使用concat()函数
+若参数存在NULL则结果为NULL，如：执行SELECT CONCAT('a','b',NULL)将会输出NULL
+
+AS给列或者表取别名，用于区分 或者 给拼接的列取别名进行下一步操作
+根据sql执行顺序，表的别名在from里定义，用处更广
+
+
+聚合函数和分组
+sum()、max()、min()、avg()、count()
+count(*)统计null和count(col)不统计null
+
+！！！查找最大年龄老师的信息
+无效写法：
+select id,name,max(age)
+from teacher
+
+select id,name,age
+from teacher
+where age=max(age)
+有效写法：
+select id,name,age
+from teacher
+where age=(select max(age) from teacher)
+聚合函数处理的数据是分组，没有分组，max(age)则把整个表看为一组，
+而id,name，age没有进行分组，没有逻辑意义
+“解决办法是在where子句使用子查询返回最大值，再基于这个最大值查询相关信息。”
+
+
+子查询
+1、where型子查询：把内层查询的结果作为外层查询的比较条件
+2、from型子查询：把内层的查询结果当成临时表，供外层sql再次查询。查询结果集可以当成表看待。临时表要使用一个别名。
+3.exists型子查询：把外层sql的结果，拿到内层sql去测试，如果内层的sql成立，则该行取出。内层查询是exists后的查询。
+
+
+分组（所有null会单独被归为一组） 筛选
+！！！使用Group By子句的时候，Select指定的每一列都应该出现在Group By子句中，除非对这一列使用了聚合函数
+group by having
+!!!语法：
+select col,聚合函数(col)
+from table
+group by col having 聚合函数(col) 条件
+！！！找到table，根据col值分组后，对行组筛选，最后对每组select生成一行输出
+
+！！！多列分组的特征：每...每...
+GROUP BY X, Y意思是将所有具有相同X字段值和Y字段值的记录放到一个分组里。
+ 例：要求统计出“每”门学科“每”个学期有多少人选择，应用如下SQL：
+ SELECT Subject, Semester, Count(*) FROM Subject_Selection GROUP BY Subject, Semester
+ 上面SQL的意思是，对Subject_Selection表中的数据进行分组，将具有相同Subject和Semester字段值的记录放到同一个分组里去， 
+ 然后对每个分组中的数据应用聚合函数
+ 
+ 再比如有一个订单表，表中记录了所有支付过的订单
+ “每”个用户在“每”种商品上总共花了多少钱，执行如下SQL
+ SELECT Product，Buyer, SUM(Spending) FROM `Order` GROUP BY Product, Buyer
+ 
+ 
+having 接收from的输出，或者接收from、where、group by输出的顺序拼接
+但having 子句中的列必须是组列
+
+！！！查询至少有两名女教师的系以及拥有的女教师数量，并按女教师数量降序序
+select dname,count(tsex) as num_girl
+from teacher
+where tsex='女'
+group by dname
+having count(tsex)>=2
+order num_girl desc
+
+游标
+当前有三张表A、B、C其中A和B是一对多关系，B和C是一对多关系，现在需要将B中A表的主键存到C中；
+常规思路就是将B中查询出来然后通过一个update语句来更新C表就可以了，但是B表中有2000多条数据，
+难道要执行2000多次？显然是不现实的；最终找到写一个存储过程然后通过循环来更新C表，
+然而存储过程中的写法用的就是游标的形式。
+游标实际上是一种能从包括多条数据记录的“结果集”中每次提取一条记录的机制。
+    游标充当“指针”的作用。
+    尽管游标能“遍历”结果中的所有行，但他一次只指向一行。
+
+------------------------------------------------------------------------------------------
+SQL题
+t_subject
+——————————
+c_id
+c_student_uid 学生uid
+c_teacher_uid 教师uid
+c_subject_uid 科目uid
+c_score 分数
+1平均分排名前三的学生uid和平均分数
+给这个SQL语句建索引怎么建？给c_student_uid建立唯一索引，而c_score使用了函数，索引会失效故不用建立
+(mysql):select c_student_uid,avg(c_score) from t_subject group by c_student_uid order by avg(c_score) desc limit 3
+select top 3 c_student_uid,avg(c_score) from t_subject group by c_student_uid order by avg(c_score) desc
+
+top 和 limit
+在access / ms sql server里面支持的sql用法select top;
+在mysql / oracle里面支持的sql用法为select ... limit;
+
+2用sql语句判断单科成绩都大于85分的是谁
+用min()聚合函数
+select c_student_uid from t_subject group by c_student_uid
+having min(c_score)>85
+
+用distinct逆向筛选（not in 或者 not exist）
+select distinct A.c_student_uid from t_subject A where A.c_student_uid not in(
+select distinct B.c_student_uid from t_subject B where B.c_score<=85
+)
+
+select distinct A.c_student_uid from t_subject A where A.c_student_uid not exist(
+select 1 from t_subject B where A.c_student_uid=B.c_student_uid and B.c_score<=85
+)
+
+
+ 
+
+

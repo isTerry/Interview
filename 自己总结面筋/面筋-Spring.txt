@@ -1,0 +1,369 @@
+Update: It's Mar 2016 now. Spring Boot offers an even better way to write applications without Java EE app servers. 
+You can create an executable JAR and run it on a JVM.
+I wonder if Oracle will continue to support the Java EE spec. Web services have taken over for EJBs. 
+The EJB solution is dead. (Just my opinion.)
+都是提供企业级服务。
+EJB是官方标准，可以移植到支持该标准的架构服务器，但也有偏差。
+Spring开源
+springboot提供自动配置、提供多个starter项目，可以生成可执行的jar，快速搭建应用，支持Java配置中声明servlet和filter，不再需要web.xml以及Springcloud等完整生态圈。
+特点：代码有一个很好的设计原则是 “高内聚，低耦合” ，这个原则也使得必须降低框架的侵入性，方便迁移和复用。
+提供其它各种框架的整合集成接口，可以自己选择组装，通过IOC/DI、AOP（用到反射、动态代理）实现最小侵入性
+如果使用侵入式的框架，一般需要继承或者实现框架的某一个类或接口，导致和框架绑死，这样你把框架换掉以后就会运行不起来，甚至在代码层面会报错。
+但spring这种非侵入式的框架，都是利用反射和动态代理，代码中没有任何与spring交叉的类，不会强迫你实现Spring的接口或继承Spring的类
+哪怕把spring的jar全部去了，你的代码不受任何影响，加上其他的框架后可以继续运行。
+要想做到绝对不依赖于任何的框架是不可能的，除非你什么都去自己’制造‘。而spring框架集成了其他很多的框架，比如hibenrate，struts什么的。
+它这样做的目的也无非是：要么你不依赖于他们，如果你实在要依赖于他们的话，就让我来依赖他们吧，而你们只需要依赖于我。
+正所谓’我不入地狱，谁入地狱‘，对于其他框架的繁琐的操作接口和一些版本的冲突spring都试着自己来解决或作出一些‘封装’，来简化我们对其操作的复杂性。
+
+-----------------------------------------
+Model：是为页面提供数据和数据校验的
+Entity：是专用于EF的对数据库表的操作，把对某一个表的操作全写在一个类中
+说白了就是为了让程序员在对数据库操作的时候不用写SQL语句，就是一个数据库表生成一个类 
+这样做对数据库操作起来方便，编写代码较少提高效率。
+Entity接近原始数据，Model接近业务对象～
+POJO（Plain Ordinary Java Object）简单的Java对象，
+（POJO其实是比javabean更纯净的简单类或接口。POJO严格地遵守简单对象的概念，而一些JavaBean中往往会封装一些简单逻辑。）
+使用POJO名称是为了避免和EJB混淆起来, 而且简称比较直接. 其中有一些属性及其getter setter方法的类,没有业务逻辑，有
+时可以作为VO(value -object)或dto(Data Transform Object)来使用.当然,如果你有一个简单的运算属性也是可以的,
+但不允许有业务方法,也不能携带有connection之类的方法。
+--------------------------------------------------------
+spring模块对应不同的jar包，涵盖企业级所需可以自由选择，并且提供第三方集成接口
+大致：测试、spring核心容器、AOP、instrumentation、数据访问集成（JDBC、transaction、ORM等）、Web与远程调用（websocket Webservlet等）
+所有模块构建于核心容器之上
+spring没有建立自己的ORM模块，而是对流行的ORM（mybatis、hibernate、jpa等）进行集成，ORM模块建立在对JDBC的支持上
+DAO 接口：Data Access Object 数据访问对象，把数据库相关的操作都封装在这个类里面，其他地方看不到JDBC的代码
+ORM：Object Relationship Database Mapping，对象和关系数据库的映射，简单地说，一个对象，对应数据库里的一条记录，
+从而大大简化原来直接使用JDBC时，手工拼写SQL带来的不便。减少JDBC的样板式代码，并对数据库的连接查询等作优化。
+
+
+容器，负责管理bean
+/org/springframework/beans/factory/BeanFactory.class bean工厂提供最基本DI支持，ApplicationContext基于bean工厂，负责管理bean
+ApplicationContext（应用上下文）是 spring 中较高级的容器，有多种实现，可基于java配置类加载、类路径下（所有类路径，包含jar文件）的xml加载、文件路径下的xml加载
+Java:接口继承接口 (多继承机制) 
+WebApplicationContext  继承了ApplicationContext接口，是ApplicationContext的扩展，它增加了WEB应用特性，还可以视图解析、主题解析、映射，
+通过ServletContext与servlet关联 ，WebApplicationContext被绑定在ServletContext上(通过ContextLoaderListener绑定)，可以通过RequestContextUtils获取WebApplicationContext。
+
+
+IOC inverse of control 控制反转 bean控制权交给spring容器
+DI dependency injection 依赖注入（构造器注入、setter()方法注入）
+传统方法由对象自己管理和他相互协作的对象，造成高度耦合，难以测试。
+通过DI，对象的依赖关系无需自己创建、管理，而是由第三方组件管理，自动注入。
+通过“装配”创建这些依赖关系（组件之间的协作行为），如.xml配置文件以及基于Java的配置（@Configuration @Bean）
+Spring通过Application Context 装载bean的定义。
+先装配（为了处理对象依赖关系，并加入容器管理）后注入
+
+
+装配方式显式（xml、JavaConfig）、隐式（bean发现自动装配），推荐隐式>javaConfig>xml
+？？？什么时候必须使用显示配置（想装配第三方库的组件，无法添加@Component）
+显示装配推荐javaconfig，更强大、类型安全、对重构友好，但配置代码不能侵入逻辑代码，所以单独放一个包
+@Configuration声明为配置类，再给方法添加@Bean声明bean实例，
+！！！根据return可返回随机类型，默认id和方法名一样；默认单例模式，对同一个方法的调用会被spring拦截，每次返回同一个Bean
+如果有引用的对象可以直接叠加方法，或者传入该类型，spring会采用必要功能保证注入
+
+隐式两步：1组件扫描（component scan）自动发现应用上下文中的bean，可用注解或者xml的ComponentScan开启，
+@ComponentScan默认扫描这个包以及子包（也可以指定多个包，basePackages），扫描的类标注@Component
+2自动装配（autowiring）自动满足依赖关系
+
+启动类@SpringBootApplication包括
+@SpringBootConfiguration @SpringBootConfiguration点开发现还是应用了@Configuration,相当于把该类作为spring的xml配置文件中的<beans>
+@EnableAutoConfiguration 实现自动装配的注解
+@ComponentScan 需要装配的类扫描，默认扫描这个包以及子包，扫描的类标注@Component
+
+如果@Component没传Id，默认为类名第一个字母小写。也可以使用Java依赖注入的规范@Named替换
+最后使用@Autowired注入也可以通过应用上下文getBean()
+注入可以用于成员变量、构造器、setter方法以及其他任意方法，
+成员变量包括实例变量和类变量，成员方法包括实例方法和类方法。
+@Resource默认按 byName自动注入
+1. 如果同时指定了name和type，则从Spring上下文中找到唯一匹配的bean进行装配，找不到则抛出异常
+2. 如果指定了name，则从上下文中查找名称（id）匹配的bean进行装配，找不到则抛出异常
+3. 如果指定了type，则从上下文中找到类型匹配的唯一bean进行装配，找不到或者找到多个，都会抛出异常
+4. 如果既没有指定name，又没有指定type，则自动按照byName方式进行装配；如果没有匹配，则回退为一个原始类型进行匹配，如果匹配则自动装配；
+@Autowired默认按类型装配（这个注解是属业spring的），默认情况下必须要求依赖对象必须存在，如果要允许null值，
+可以设置它的required属性为false，如：@Autowired(required=false) 
+当一个接口多个实现时，按照类型装配会出现歧义，可以结合@Qualifier使用名称装配
+如果是默认的名称，当重构类名后，@Qualifier("name")就不一样了，所以可以自己设置一个全局唯一名字
+
+
+其他注解
+@Controller 
+@RequestMapping 和 @GetMapping @PostMapping 
+处理requet uri 部分（这里指uri template中variable，不含queryString部分）的注解：   @PathVariable;
+处理request header部分的注解：   @RequestHeader, @CookieValue;
+处理request body部分的注解：@RequestParam,  @RequestBody;
+！！！在使用@RequestMapping后，返回值通常解析为跳转路径，加上@responsebody后返回结果不会被解析为跳转路径，
+而是直接写入HTTP response body中。比如异步获取json数据，加上@responsebody后，会直接返回json数据。
+如果返回模型对象而非简单字符串，又没@responsebody注解，将会根据请求路径推断逻辑视图（jsp等）
+（！！！@responsebody 告诉spring，将返回的对象作为资源发送给客户端，并转换为客户端接受的形式，
+DispatcherServlet会考虑请求头部Accept信息）
+3！！！@ResponseEntity合理发送错误信息到客户端，
+比如查询为空返回null，但显示200OK不合理。利用@ResponseEntity指定响应状态码如404，并且把原对象（null）替换为定义的错误信息对象
+
+@ResponseEntity 相比@ResponseBody，可以设置状态码
+@ResponseEntity和@ResponseBody都会绕过视图解析器
+
+@Service @Repository 
+
+@Scope("prototype")
+定义Bean的作用域和生命过程
+值有:singleton,单例，整个应用一个
+prototype,原型，每次注入或通过应用上下文获取，创建一个新的
+session,一个会话一个（针对关联用户，比如一个用户一个购物车）
+request,一个请求一个
+globalSession
+
+@PostConstruct 
+相当于init-method,使用在方法上，当Bean初始化后执行。
+
+@PreDestroy 
+相当于destory-method，使用在方法上，当Bean销毁前执行。
+
+@Transactional  
+声明式事务
+
+@PropertySource指定配置文件
+再注入Enviroment 或者 使用@value 通常用于配置类读取配置文件
+避免硬编码（避免字符串配置写进代码）
+
+（springmvc中有两种很普遍的AOP实现：
+1.过滤器（Filter）
+2.拦截器（Interceptor））
+aop的实现主要有两种方式，一种是通过回调函数，另一种是代理。
+AOP aspect-oriented programming 面向切面编程（反射、动态代理实现，基于切点的接口。如果没有接口使用cglib）
+把核心业务逻辑组件和横切面（比如日志、事务、安全spring security管理等）分离（解耦）开，并且可以实现拦截。切面即服务模块，切点即核心业务
+使这些服务模块化，以声明（如xml<bean> <aop> 利用AspectJ切点表达式语言，前后置通知）的方式去包裹核心业务。
+
+实现方式比较：
+（使用AspectJ编译器）
+在编译时、类加载时完成，
+可以编织字段、方法、构造函数等......
+可以在所有域对象上实现
+在执行应用程序之前前, 各方面直接在代码中进行织入
+AspectJ 在应用程序执行之前将这些方面编织到主代码中, 因此没有额外的运行时开销, 性能更好。
+
+（spring AOP 采用JDK动态代理 或者 无接口CGLIB 代理）
+是基于代理的框架，直到运行时才创建代理对象，对性能产生负面影响
+仅支持方法级编织（代理是由目标对象创建的, 并且切面应用在这些代理上）
+只能在由 Spring 容器管理的 bean 上实现
+Spring AOP 显然更简单, 因为它不会在我们的构建过程中引入任何额外的编译器。
+
+
+切面：横切关注点（（安全、事务、日志））被模块化为特殊的类，这些类称为切面
+通知（何时、完成什么）：切面也需要完成工作。在 AOP 术语中，切面的工作被称为通知。除了描述切面要完成的工作，通知还解决何时执行这个工作。
+Spring 切面可应用的 5 种通知类型：
+Before——在方法调用之前调用通知
+After——在方法返回或者抛出异常后调用，无论方法执行成功与否
+After-returning——在方法返回之后调用通知
+After-throwing——在方法抛出异常后进行通知
+Around——通知包裹了被通知的方法，在被通知的方法调用之前和调用之后执行自定义的行为
+try {
+ 4        //@Before
+ 5        result = method.invoke(target, args);
+ 6        //@After
+          //@AfterReturning
+ 7        return result;
+ 8    } catch (InvocationTargetException e) {
+ 9        Throwable targetException = e.getTargetException();
+11        throw targetException;
+		  //@After
+		  //@AfterThrowing
+12    } finally {
+14    }
+
+连接点：连接点是一个应用执行过程中能够插入一个切面的点。连接点是一个虚拟的概念，可以理解为所有满足切点扫描条件的所有的时机
+
+切点（何处）：pointcut标签表示一个切点，也就是满足条件被扫描到的目标方法。
+相对于通知的何时、完成什么，切点定义了何处，有助于缩小切面通知的连接点范围。
+如下示例表示匹配返回值为任意类型，并且是com.spring.service包及其子包下的任意类的名称为businessService的方法，
+而且该方法不能有任何参数：
+execution(* com.spring.service..*.businessService())
+
+引入：添加方法或字段到被通知的类，Spring允许引入新的接口到任何被通知的对象。
+这不就是把切面（也就是新方法属性：通知定义的）用到目标类中吗
+
+织入：组装切面来创建一个被通知对象。把切面应用到目标对象来创建新的代理对象的过程。
+
+--------------------------------------------------------------
+profile特性以及条件化配置
+传统是CI（DEV）、STG（QA）、PRD环境分别有配置文件，单独构建应用。
+而spring是运行时决策。将不同的bean定义整理到多个profile，@profile应用在类或方法级别，运行前确保对应的profile激活（active）
+spring Boot除了支持所有的profile配置，通过配置文件中spring.profile.active激活 或者 在程序中设定：
+SpringApplication.setAdditionalProfiles() 或者 pom.xml文件中的spring-boot-maven-plugin中配置
+但是Spring Boot带来的最重要的特性是profile-specific profiles文件，这些文件的命名方式需要遵循applications-{profile}.properties的格式。
+
+通过模板封装去除样板式代码，例如Spring的JdbcTemplate避免传统JDBC建立连接、创建语句对象、查询数据、关闭连接、捕获异常的样板式代码
+
+MVC模式:构建Web应用的方法，分离界面逻辑和业务逻辑。Model+View+Controller
+View视图（如css、html、js）---通过js联系和返回---Controller控制器---操作---Model模型（业务逻辑对象、也可以是存取数据的对象或 JAVA POJO）。
+Controller之间是不可以相互调用、各Model之间是可以相互调用的
+MVC框架：Apache struts、springMVC 等
+springmvc工作流程
+1、 用户向服务端发送一次请求，这个请求会先到前端控制器DispatcherServlet(也叫中央控制器)。
+2、DispatcherServlet接收到请求后会调用HandlerMapping处理器映射器。由此得知，该请求该由哪个Controller来处理（并未调用Controller，只是得知）
+3、DispatcherServlet调用HandlerAdapter处理器适配器，告诉处理器适配器应该要去执行哪个Controller
+4、HandlerAdapter处理器适配器去执行Controller并得到ModelAndView(数据和视图)，并层层返回给DispatcherServlet
+5、DispatcherServlet将ModelAndView交给ViewReslover视图解析器解析，然后返回真正的视图。
+6、DispatcherServlet将模型数据填充到视图中
+7、DispatcherServlet将结果响应给用户
+组件说明
+DispatcherServlet：前端控制器，也称为中央控制器，它是整个请求响应的控制中心，组件的调用由它统一调度。
+HandlerMapping：处理器映射器，它根据用户访问的 URL 映射到对应的后端处理器 Handler。也就是说它知道处理用户请求的后端处理器，但是它并不执行后端处理器，而是将处理器告诉给中央处理器。
+HandlerAdapter：处理器适配器，它调用后端处理器中的方法，返回逻辑视图 ModelAndView 对象。
+ViewResolver：视图解析器，将 ModelAndView 逻辑视图解析为具体的视图（如 JSP）。
+Handler：后端处理器，对用户具体请求进行处理，也就是我们编写的 Controller 类。
+
+springboot默认配置DispatcherServlet 是映射到“/”的，可以在application.properties修改配置：server.servlet-path
+
+-------------------------------------------------------------------------------------------
+https://www.cnblogs.com/hhhshct/p/8808115.html
+！！！springmvc：三大器在springboot中使用时，首先实现相应的接口定义类，然后通过配置类将其加入到spring容器中，从而实现相应的功能。
+1.监听器 一个监听器实例只能在容器初始化时调用一次
+主要作用是： 做一些初始化的内容添加工作、设置一些基本的内容、比如一些参数或者是一些固定的对象等等。
+如SpringMVC的监听器org.springframework.web.context.ContextLoaderListener，
+实现了SpringMVC容器的加载、Bean对象创建、DispatchServlet初始化等。
+------------------------------------------------------------------------
+2.过滤器（Filter）过滤器就是过滤的作用，一个过滤器实例只能在容器初始化时调用一次
+过滤器是在请求进入tomcat容器后，但请求进入servlet之前进行预处理的。请求结束返回也是，是在servlet处理完后，返回给前端之前。
+过滤器只能在请求的前后使用
+属于面向切面编程（AOP）的一种运用
+在web开发中过滤一些我们指定的url
+、获取我们想要获取的数据（在过滤器中修改字符编码；在过滤器中修改HttpServletRequest的一些参数，包括：过滤低俗文字、危险字符等。）
+实现Filter接口
+@Component
+@WebFilter(urlPatterns = "/Blogs",filterName = "blosTest")
+public class TestFilter implements Filter{}
+我们一步步来
+1.@Component就是把这个类注入到IOC容器中
+2.@WebFilter(urlPatterns = "/Blogs",filterName = "blosTest")说明这是一个web过滤器，它拦截的url为
+/Blogs
+，过滤器名字为
+blogsTest
+------------------------------------------------------------------------
+3.拦截器（Interceptor）一个拦截器实例在一个controller生命周期之内可以多次调用
+拦截器可以调用IOC容器中的各种依赖，而过滤器不能
+属于面向切面编程（AOP）的一种运用
+只能对controller请求进行拦截。
+拦截器是基于web框架的调用，因此可以使用Spring的依赖注入（DI）进行一些业务操作，
+public class MyInterceptor implements HandlerInterceptor {
+    //在请求处理之前进行调用（Controller方法调用之前
+    @Override
+    public boolean preHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o) throws Exception {
+        System.out.printf("preHandle被调用");
+        return true;    //如果false，停止流程，api被拦截
+    }
+ 
+    //请求处理之后进行调用，但是在视图被渲染之前（Controller方法调用之后）
+    @Override
+    public void postHandle(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, ModelAndView modelAndView) throws Exception {
+        System.out.println("postHandle被调用");
+    }
+ 
+    //在整个请求结束之后被调用，也就是在DispatcherServlet 渲染了对应的视图之后执行（主要是用于进行资源清理工作）
+    @Override
+    public void afterCompletion(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Object o, Exception e) throws Exception {
+        System.out.println("afterCompletion被调用");
+    }
+}
+它依次实现了三个方法
+相比过滤器，拦截器还需要在springmvc中注入
+所以我们打开启动类，写入以下代码
+
+public class WarApplication {
+ 
+    public static void main(String[] args) {
+        SpringApplication.run(WarApplication.class, args);
+    }
+ 
+    //mvc控制器
+    //@Configuration
+    static class WebMvcConfigurer extends WebMvcConfigurerAdapter{
+        //增加拦截器
+        public void addInterceptors(InterceptorRegistry registry){
+            registry.addInterceptor(new MyInterceptor())    //指定拦截器类
+                    .addPathPatterns("/Handles");        //指定该类拦截的url
+        }
+    }
+}
+------------------------------------------------------------------------------
+SOAP Simple Object Access Protocol 简单对象访问协议，是交换数据的一种协议规范，是一种轻量的、简单的、基于XML（标准通用标记语言下的一个子集）的协议
+1在SOAP模式把HTTP作为一种通信协议，而不是应用协议。所以http中的表头，错误信息等全部无视。实际上http有 put get post delete等方法。
+因为SOAP并不假定传输数据的下层协议，因此必须设计为能在各种协议上运行。即使绝大多数SOAP是运行在HTTP上，使用URI标识服务，
+SOAP也仅仅使用POST方法发送请求，用一个唯一的URI标识服务的入口。
+2举一个图书馆在线查询管理系统为例，服务提供者必须为每一本书提供一个内部标识，然后可能定义一个listBooks操作来返回一系列图书，
+一个getBook操作来返回指定的图书，一个createBook操作来向数据库加入新增的图书，一个deleteBook操作来删除作废的图书，
+每个操作都有各自的参数，尤其是用内部标识来标识操作的图书。这种设计被诟病之处，在于deleteBook操作也要用POST方法来发送，
+而其实HTTP协议有更和逻辑的DELETE方法. 
+3耦合度高，SOAP下客户端和服务器，一端的改变需要另一端改变。
+4只允许XML
+
+REST Representational State Transfort 代表状态转移 REST只是一种架构风格，而不是协议或标准。
+1它面向资源，甚至连服务也抽象成资源，它服务器无状态，它和HTTP紧密结合，把HTTP协议利用到了极限（也可以其他协议），构建的成本减少了。
+2HTTP method中的 POST GET PUT DELETE 都是与请求方法对应的，提交的请求中，服务器可以通过请求方式直接判断请求动作是要进行什么操作
+REST设计，为每一个资源（此处是图书）指定一个唯一的URI，而不用再在服务器端开发一套资源访问机制。
+而用HTTP的4种方法GET、POST、PUT、DELETE直观地表示获取、创建、更新和删除
+同时图书集合也是和单本的图书不同的资源，如果用/books来代表图书列表，/books/ID来代表标识为ID的图书，那么对/books的GET操作就代表返回整个图书列表，
+对/books/ID的DELETE操作代表删除指定的图书，等等。
+又如只需简单配置服务器就能规定资源的访问权限，例如通过禁止非GET访问把资源设成只读。
+3低耦合，访问一个rest服务不需要知道它的Api细节（知道资源就对应所有操作），并且可以通用扩展
+4根据request header 参数 "Accept" 返回同一资源的不同格式（restful+@ResponseBody 实现前后端分离）
+as application/xml or application/json for POST 
+and /user/1234.json or GET /user/1234.xml for GET.
+------------------------------------------------------------------------------
+
+springMVC创建 restful：
+1符合资源中心的url定义，利用get,post,put,delete体现动作
+2！！！在使用@RequestMapping后，返回值通常解析为跳转路径，加上@responsebody后返回结果不会被解析为跳转路径，
+而是直接写入HTTP response body中。比如异步获取json数据，加上@responsebody后，会直接返回json数据。
+（！！！@responsebody 告诉spring，将返回的对象作为资源发送给客户端，并转换为客户端接受的形式，
+DispatcherServlet会考虑请求头部Accept信息）
+如果返回模型对象而非简单字符串，又没@responsebody注解，将会根据请求路径推断跳转路径，把模型数据传给视图解析器，生成逻辑视图
+3！！！@ResponseEntity合理发送错误信息到客户端，
+比如查询为空返回null，但显示200OK不合理。利用@ResponseEntity指定响应状态码如404，并且把原对象（null）替换为定义的错误信息对象
+-------------------------------------------------------------------------------
+spring bean spring的原生接口 注入机制，加载机制，bean生命周期，autowire机制
+
+Servlet规范了解吗？Servlet的整个业务流程？
+Spring IoC中Bean的生命周期？谁来管理Bean的生命周期？
+提到的Aware相关接口指的是什么？平常会自己会用Aware相关接口吗？Bean生命周期这么长是为什么？
+BeanFactory和ApplicationContext的关系？@Autowired和@Resource的区别？ Spring的自动扫描怎么实现的？谁实现的？
+MyBatis介绍一下？你说到这是一个持久层框架，那你了解JPA规范吗？（不知道）
+
+ApplicationContext的初始化逻辑
+
+spring官网
+springboot怎么启动的？遇到过什么问题吗？是放到tomcat吗？启动的时候加载的信息是什么东西？
+
+spring mvc 的低耦合的耦合是什么意思
+
+Mybatis优点
+mybatis自动生成
+
+mybatis实现查询/插入自增
+原本是这样的：
+　　将insert语句传入，正常执行insert操作，返回int永远是 0[失败] 或者 1[成功]
+需求是这样的：
+　　mybatis中insert操作，返回自增id，因为这个自增id需要给后续业务用到。
+useGeneratedKeys设置使用自增主键，并且传入指定的对象，keyProperty指定哪个字段用接收insert之后返回的自增id
+useGeneratedKeys="true"
+keyProperty="id" 
+
+spring事务传播机制
+
+为什么要用springboot+mybatis
+结合websocket，异步的Web消息推送
+为什么要用spring,不用spring的话要怎么办
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
