@@ -329,12 +329,16 @@ MyBatis介绍一下？你说到这是一个持久层框架，那你了解JPA规�
 
 ApplicationContext的初始化逻辑
 
+beanfactory和factorybean区别
+
+IOC如何实现的？
+
 spring官网
 springboot怎么启动的？遇到过什么问题吗？是放到tomcat吗？启动的时候加载的信息是什么东西？
 
 spring mvc 的低耦合的耦合是什么意思
 
-Mybatis优点
+Mybatis优点、mybatis核心组件
 mybatis自动生成
 
 mybatis实现查询/插入自增
@@ -346,14 +350,17 @@ useGeneratedKeys设置使用自增主键，并且传入指定的对象，keyProp
 useGeneratedKeys="true"
 keyProperty="id" 
 
-spring事务传播机制
+spring事务、传播机制
+@Trasactional注解，一个controller分别调用两个service再调用两个Dao加在哪里？
+
 
 为什么要用springboot+mybatis
 结合websocket，异步的Web消息推送
 为什么要用spring,不用spring的话要怎么办
 
+SpringBoot源码
 
-
+SpringBoot如何启动，如何找到启动类？
 
 
 
